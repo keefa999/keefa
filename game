@@ -1,0 +1,185 @@
+int gameScreen = 0;
+float ballX, ballY;
+float ballSize = 20;
+float ballColor = color(0);
+float gravity = 1;
+float ballSpeedVert = 0;
+float airfriction = 0;
+float friction = 0.1;
+int nX = 0; // basket x
+int nY = 500; // basket y
+boolean pCount = true;
+int p = 0;
+float ballSpeedHorizon = 10;
+color racketColor = color(0);
+float racketWidth = 100;
+float racketHeight = 10;
+int racketBounceRate = 20;
+long t = 0;
+int dX = 150;
+int dY = 700;
+
+void setup() {
+  size(500,700);
+  ballX = width/4;
+  ballY = height/5;
+  t = millis();
+  nY = height - 25;
+}
+void draw() {
+  if(gameScreen==0) {
+    initScreen();
+  } else if (gameScreen==1) {
+    gameScreen();
+  } else if (gameScreen==2) {
+    gameOverScreen();
+  }
+}
+void initScreen () {
+  background(50);
+  textAlign(CENTER);
+  textSize(35);
+  text("Click to Start", 250, 225);
+}
+void gameScreen() {
+  background (247, 240, 241);
+  drawBall();
+  keepInScreen();
+  applyGravity();
+  drawRacket();
+  applyHorizontalSpeed();
+  watchRacketBounce();
+  drawDeath();
+  collisionDet();
+  pointCounter();
+  float timer = (millis() - t) / 1000;
+  fill(0);
+  textSize(20);
+  text("Center Hits: " + p, 400, 40);
+  text("Time: " + (0 + timer), 70, 40);
+}
+void applyGravity() {
+  ballSpeedVert += gravity;
+  ballY += ballSpeedVert;
+  ballSpeedVert -= (ballSpeedVert * airfriction);
+}
+void gameOverScreen() {
+  background(0);
+  noLoop();
+  textAlign(CENTER);
+  textSize(35);
+  fill(255);
+  text("Game Over", 250, 255);
+  textSize(20);
+  text("Points: " + p, 250, 320);
+  float timer = (millis() - t) / 1000;
+  text("Time: " + (0 + timer), 250, 360);
+}
+public void mousePressed(){
+  if (gameScreen==0){
+    startGame();
+  }
+}
+void startGame(){
+  gameScreen=1;
+}
+void drawBall() {
+  fill(ballColor);
+  ellipse(ballX, ballY, ballSize, ballSize);
+}
+  
+void keepInScreen() {
+  if (ballY+(ballSize/2) > height) {
+    makeBounceBottom(height);
+  }
+  if (ballY-(ballSize/2) < 0) {
+    makeBounceTop(0);
+  }
+  if (ballX+(ballSize/2) > width) {
+    makeBounceRight(width);
+  }
+  if (ballX-(ballSize/2) < 0) {
+    makeBounceLeft(0);
+  }
+}
+void makeBounceBottom(float surface) {
+  ballY = surface - (ballSize/2);
+  ballSpeedVert*=-1;
+  ballSpeedVert -= (ballSpeedVert * friction);
+}
+void keyPressed() { // move right
+  if (keyCode == RIGHT) {
+    nX = nX + 10;
+  }
+  if (keyCode == LEFT) { // move left
+    nX = nX - 10;
+  }
+
+  if (nX < 0) {
+    nX = 0;
+  }
+  if (nX > width - 20) {  
+    nX = width - 20;
+  }
+}
+void makeBounceTop(float surface) {
+  ballY = surface+ (ballSize/2);
+  ballSpeedVert*=-1;
+  ballSpeedVert -= (ballSpeedVert * friction);
+}
+void makeBounceLeft(float surface) {
+  ballX = surface+(ballSize/2);
+  ballSpeedHorizon*=-1;
+  ballSpeedHorizon -= (ballSpeedHorizon * friction);
+}
+void makeBounceRight(float surface) {
+  ballX = surface-(ballSize/2);
+  ballSpeedHorizon*=-1;
+  ballSpeedHorizon -= (ballSpeedHorizon * friction);
+}
+void applyHorizontalSpeed() {
+  ballX += ballSpeedHorizon;
+  ballSpeedHorizon -= (ballSpeedHorizon * airfriction);
+}
+void drawRacket() {
+  fill(racketColor);
+  rectMode(CENTER);
+  rect(mouseX, mouseY, racketWidth, racketHeight);
+}
+void watchRacketBounce() {
+  float overhead = mouseY - pmouseY;
+  if ((ballX+(ballSize/2) > mouseX-(racketWidth/2)) && (ballX-(ballSize/2) < mouseX+(racketWidth/2))) {
+    if (dist(ballX, ballY, ballX, mouseY)<=(ballSize/2)+abs(overhead)) {
+      makeBounceBottom(mouseY);
+     ballSpeedHorizon = (ballX - mouseX)/5;
+      if (overhead<0) {
+        ballY+=overhead;
+        ballSpeedVert+=overhead;
+      }
+    }
+  }
+}
+void drawDeath() {
+  fill(255, 0, 0);
+  rect(dX, dY, 700, 200);
+}
+void collisionDet() {
+  if (ballY + 10 > dY && ballY - 10 < dY + 20) {
+    if (ballX + 10 > dX && ballX - 10 < dX + 20) {
+      gameOverScreen();
+    }
+  }
+}
+void pointCounter() {
+  if (ballY + 40 > mouseY && ballY - 10 < mouseY + 20) {
+    if ( ballX + 40 > mouseX && ballX - 10 < mouseX + 20) {
+      p = p + 1;
+    }
+  }
+}
+void restart() {
+  gameScreen=0;
+  ballX=width/4;
+  ballY=height/5;
+}  
+  
